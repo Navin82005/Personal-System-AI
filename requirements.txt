@@ -1,0 +1,9 @@
+fastapi[standard]
+uvicorn
+chromadb
+sentence-transformers
+pdfplumber
+python-docx
+groq
+pydantic-settings
+python-multipart
