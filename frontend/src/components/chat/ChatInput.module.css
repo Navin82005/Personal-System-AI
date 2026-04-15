@@ -1,0 +1,80 @@
+/* ChatInput.module.css */
+
+.container {
+  padding: 16px 24px 24px;
+  background: linear-gradient(to top, var(--chat-bg) 70%, transparent);
+  flex-shrink: 0;
+}
+
+.inputRow {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  background: var(--input-bg);
+  border: 1px solid var(--input-border);
+  border-radius: 24px;
+  padding: 6px 6px 6px 18px;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  transition: border-color var(--transition-speed), box-shadow var(--transition-speed);
+}
+
+.inputRow:focus-within {
+  border-color: var(--input-hover-border);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+.textarea {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  resize: none;
+  color: var(--text-primary);
+  font-family: var(--font-family);
+  font-size: 14px;
+  line-height: 1.6;
+  padding: 8px 0;
+  max-height: 120px;
+  overflow-y: auto;
+}
+
+.textarea::placeholder {
+  color: var(--text-secondary);
+  opacity: 0.7;
+}
+
+.sendBtn {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: none;
+  background: var(--accent-color);
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-speed);
+  flex-shrink: 0;
+}
+
+.sendBtn:hover:not(:disabled) {
+  background: var(--accent-hover);
+  transform: scale(1.08);
+  box-shadow: 0 4px 16px rgba(37, 99, 235, 0.5);
+}
+
+.sendBtn:disabled {
+  background: rgba(255, 255, 255, 0.1);
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.hint {
+  font-size: 11px;
+  color: var(--text-secondary);
+  text-align: center;
+  margin-top: 8px;
+  opacity: 0.6;
+}

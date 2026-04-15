@@ -1,0 +1,175 @@
+openapi: 3.0.3
+info:
+  title: Personal System AI
+  description: API for document scanning, indexing, and RAG-based querying for Personal System AI.
+  version: 0.1.0
+servers:
+  - url: http://127.0.0.1:8000
+    description: Local development server
+
+paths:
+  /scan-folder:
+    post:
+      summary: Scan and Index Folder
+      description: |
+        Endpoint to trigger folder scanning and indexing. It recursively reads supported 
+        files in the specified directory, chunks them, and stores the embeddings in ChromaDB.
+      operationId: scan_folder
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ScanRequest'
+      responses:
+        '200':
+          description: Successful scan operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScanResponse'
+        '400':
+          description: Bad Request (Directory not found or scan failure)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /query:
+    post:
+      summary: Query Indexed Documents
+      description: |
+        Endpoint to ask questions based on indexed documents. If a specific source file is mentioned,
+        the query filters specifically for that file (File-Specific Query). Otherwise, it searches globally.
+      operationId: query_documents
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QueryRequest'
+      responses:
+        '200':
+          description: Answer response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QueryResponse'
+
+  /documents:
+    get:
+      summary: List Indexed Documents
+      description: Endpoint to list all indexed document sources and their associated metadata.
+      operationId: list_documents
+      responses:
+        '200':
+          description: List of indexed documents
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocumentListResponse'
+
+components:
+  schemas:
+    ScanRequest:
+      type: object
+      required:
+        - folder_path
+      properties:
+        folder_path:
+          type: string
+          description: Absolute path to the folder to be scanned.
+          example: "/Users/naveenn/Documents/Projects/Personal System AI/test_data"
+
+    ScanResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: "success"
+        total_files_found:
+          type: integer
+          example: 5
+        processed_files:
+          type: integer
+          example: 4
+        failed_files:
+          type: integer
+          example: 1
+
+    QueryRequest:
+      type: object
+      required:
+        - query
+      properties:
+        query:
+          type: string
+          description: The natural language question.
+          example: "What does it say in architecture_notes.md?"
+        top_k:
+          type: integer
+          description: Number of relevant chunks to retrieve.
+          default: 3
+          example: 3
+
+    QueryResponse:
+      type: object
+      properties:
+        answer:
+          type: string
+          description: The generated answer from the LLM.
+          example: "The architecture notes state that..."
+        source_file:
+          type: string
+          nullable: true
+          description: The file name used if it was a file-specific query or top source.
+          example: "architecture_notes.md"
+        relevant_chunks:
+          type: array
+          items:
+            type: string
+          description: The exact document chunks used as context.
+
+    DocumentListResponse:
+      type: object
+      properties:
+        documents:
+          type: array
+          items:
+            $ref: '#/components/schemas/DocumentObject'
+        total_count:
+          type: integer
+          example: 1
+
+    DocumentObject:
+      type: object
+      properties:
+        source:
+          type: string
+          description: The absolute file path to the source document.
+          example: "/Users/naveenn/Documents/Projects/Personal System AI/test_data/architecture_notes.md"
+        metadata:
+          type: object
+          properties:
+            file_name:
+              type: string
+              example: "architecture_notes.md"
+            file_path:
+              type: string
+              example: "/Users/naveenn/Documents/Projects/Personal System AI/test_data/architecture_notes.md"
+            created_at:
+              type: string
+              example: "2026-03-14 11:52:27.273816"
+            updated_at:
+              type: string
+              example: "2026-03-14 11:52:27.273816"
+            size_bytes:
+              type: integer
+              example: 1024
+
+    ErrorResponse:
+      type: object
+      properties:
+        detail:
+          type: string
+          example: "Error scanning folder: Path is not a valid directory."
