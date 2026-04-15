@@ -3,7 +3,7 @@ from utils.logging import setup_logger
 
 logger = setup_logger("retriever")
 
-def retrieve_context(query: str, vector_db: VectorDB, top_k: int = 3, where: dict = None):
+def retrieve_context(query: str, vector_db: VectorDB, top_k: int = 3, where: dict | None = None):
     print(f"DEBUG: retriever.retrieve_context top_k={top_k}, where={where}")
     results = vector_db.search(query, top_k=top_k, where=where)
     
@@ -12,9 +12,9 @@ def retrieve_context(query: str, vector_db: VectorDB, top_k: int = 3, where: dic
     
     # Chroma returns lists of lists. Since we only submit 1 query, we take the 0th element.
     documents = results.get("documents", [[]])[0]
-    metadatas = results.get("metadatas", [[]])[0]
+    metadata = results.get("metadatas", [[]])[0]
     
-    for doc, meta in zip(documents, metadatas):
+    for doc, meta in zip(documents, metadata):
         contexts.append(doc)
         if meta and "source" in meta:
             sources.add(meta["source"])

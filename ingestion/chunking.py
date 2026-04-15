@@ -1,5 +1,6 @@
 from typing import List
 from dataclasses import dataclass
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 @dataclass
 class DocumentChunk:
@@ -9,24 +10,17 @@ class DocumentChunk:
 def split_text(text: str, metadata: dict, chunk_size: int = 500, overlap: int = 100) -> List[DocumentChunk]:
     """
     Splits text into chunks of `chunk_size` characters with an `overlap`.
-    Uses simple character splitting as requested, which can be improved to semantic split later.
+    Uses langchain-text-splitters RecursiveCharacterTextSplitter.
     """
-    chunks = []
     if not text:
-        return chunks
+        return []
         
-    start = 0
-    text_length = len(text)
+    text_splitter = RecursiveCharacterTextSplitter(
+        chunk_size=chunk_size,
+        chunk_overlap=overlap,
+        length_function=len,
+        is_separator_regex=False,
+    )
     
-    while start < text_length:
-        end = min(start + chunk_size, text_length)
-        chunk_text = text[start:end]
-        chunks.append(DocumentChunk(text=chunk_text, metadata=metadata))
-        
-        # Move the start forward by chunk_size - overlap
-        start += (chunk_size - overlap)
-        
-        if start >= text_length:
-            break
-            
-    return chunks
+    chunks = text_splitter.split_text(text)
+    return [DocumentChunk(text=chunk, metadata=metadata) for chunk in chunks]

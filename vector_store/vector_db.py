@@ -1,6 +1,8 @@
 import chromadb
 from chromadb.utils import embedding_functions
+import requests
 from config import settings
+from ingestion.chunking import DocumentChunk
 from utils.logging import setup_logger
 
 logger = setup_logger("vector_db")
@@ -18,18 +20,33 @@ class VectorDB:
         print(f"DEBUG: VectorDB initialized at {settings.vector_db_path}")
         logger.info(f"Initialized ChromaDB at {settings.vector_db_path}")
 
-    def add_chunks(self, chunks: list, source: str):
+    def _get_embedding(self, text: str) -> chromadb.Embeddings:
+        response = requests.post(
+            "http://localhost:11434/api/embeddings",
+            json={
+                "model": "nomic-embed-text",
+                "prompt": text
+            }
+        )
+        response.raise_for_status() # Good practice to catch API errors
+        
+        embedding = response.json()["embedding"]
+        return embedding
+
+    def add_chunks(self, chunks: list[DocumentChunk], source: str):
         print(f"DEBUG: VectorDB add_chunks: received {len(chunks)} chunks for source: {source}")
         if not chunks:
             print("DEBUG: VectorDB add_chunks: no chunks to add, returning")
             return
             
         documents = []
+        embedding = []
         metadatas = []
         ids = []
         
         for i, chunk in enumerate(chunks):
             documents.append(chunk.text)
+            embedding.append(self._get_embedding(chunk.text))
             metadata = chunk.metadata.copy()
             metadata["source"] = source
             metadatas.append(metadata)
@@ -37,16 +54,19 @@ class VectorDB:
             
         # Add to collection (Chroma handles embedding under the hood via the embedding_fn)
         self.collection.add(
+            embeddings=embedding,
             documents=documents,
             metadatas=metadatas,
             ids=ids
         )
+        
         print(f"DEBUG: VectorDB add_chunks: successfully added {len(chunks)} chunks to collection")
         logger.info(f"Added {len(chunks)} chunks to vector store from {source}")
 
-    def search(self, query: str, top_k: int = 3, where: dict = None):
-        kwargs = {
-            "query_texts": [query],
+    def search(self, query: str, top_k: int = 3, where: dict | None = None) -> chromadb.QueryResult:
+        query_embedding = self._get_embedding(query)
+        kwargs: dict = {
+            "query_embeddings": [query_embedding],
             "n_results": top_k
         }
         if where:

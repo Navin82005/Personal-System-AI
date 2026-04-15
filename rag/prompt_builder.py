@@ -1,9 +1,15 @@
 def build_prompt(query: str, context: str) -> str:
-    prompt = f"""You are a helpful and intelligent Personal System AI assistant. 
-You must answer questions using ONLY the provided document context.
+    prompt = f"""
+You are a helpful and intelligent Personal System AI assistant.
 
-If you don't know the answer or the context doesn't contain the information, just say that you don't know, don't try to make up an answer.
-Keep the answer concise and strictly based on the provided context.
+Answer the question using ONLY the information provided in the context.
+
+Instructions:
+- Carefully read the context and extract the relevant information.
+- The context may contain tables, lists, or unstructured text.
+- If the answer exists in the context, extract it and respond clearly.
+- Do not invent information.
+- If the answer truly cannot be found in the context, respond with: "I don't know."
 
 Context:
 {context}
@@ -11,5 +17,6 @@ Context:
 Question:
 {query}
 
-Answer:"""
+Answer:
+"""
     return prompt

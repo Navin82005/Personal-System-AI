@@ -1,32 +1,40 @@
-from groq import Groq
+import json
+import urllib.request
 from config import settings
 from utils.logging import setup_logger
 
 logger = setup_logger("generator")
 
-def generate_answer(prompt: str) -> str:
-    if not settings.groq_api_key:
-        logger.error("GROQ_API_KEY is not set.")
-        return "Error: GROQ_API_KEY is not set. Cannot generate answer."
-
-    client = Groq(api_key=settings.groq_api_key)
-    
+def generate_answer(prompt: str) -> str | None:
     try:
-        chat_completion = client.chat.completions.create(
-            messages=[
+        url = "http://localhost:11434/api/chat"
+        data = {
+            "model": "phi3:mini",
+            "messages": [
                 {
                     "role": "system",
                     "content": "You are a helpful and intelligent Personal System AI assistant. Respond directly to the prompt based on the provided context."
                 },
-                {"role": "user", "content": prompt},
+                {"role": "user", "content": prompt}
             ],
-            # Use llama3 model from Groq
-            model="llama-3.1-8b-instant",
-            temperature=0.3,
+            "stream": False,
+            "options": {
+                "temperature": 0.3
+            }
+        }
+        
+        req = urllib.request.Request(
+            url, 
+            data=json.dumps(data).encode('utf-8'), 
+            headers={'Content-Type': 'application/json'}
         )
-        print("DEBUG: Groq chat completion successful")
-        return chat_completion.choices[0].message.content
+        
+        with urllib.request.urlopen(req) as response:
+            result = json.loads(response.read().decode('utf-8'))
+            print("DEBUG: Ollama chat completion successful")
+            return result['message']['content']
+            
     except Exception as e:
-        print(f"DEBUG: Groq Chat Completion failed: {e}")
-        logger.error(f"Error calling Groq API: {e}")
+        print(f"DEBUG: Ollama Chat Completion failed: {e}")
+        logger.error(f"Error calling Ollama API: {e}")
         return f"Error generating answer: {str(e)}"

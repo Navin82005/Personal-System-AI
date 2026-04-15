@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, UploadFile
 from pydantic import BaseModel
 from typing import List
 from ingestion.embedding_pipeline import ingest_folder
@@ -9,9 +9,21 @@ from rag.generator import generate_answer
 from rag.query_analyzer import analyze_query
 from utils.logging import setup_logger
 
+from application.use_cases.voice_query import VoiceQueryUseCase
+from application.use_cases.query_rag import RagPipeline
+from infrastructure.stt.whisper_service import WhisperService
+from infrastructure.tts.fish_speech_service import FishSpeechService
+
 logger = setup_logger("chat_routes")
 router = APIRouter()
 vector_db = VectorDB()
+
+# Initialize Voice Query services
+rag_pipeline = RagPipeline(vector_db)
+whisper_stt = WhisperService()
+fish_tts = FishSpeechService()
+voice_use_case = VoiceQueryUseCase(stt=whisper_stt, tts=fish_tts, rag=rag_pipeline)
+
 
 class ScanRequest(BaseModel):
     folder_path: str
@@ -95,3 +107,18 @@ def list_documents():
         })
         
     return {"documents": documents, "total_count": len(sources)}
+
+@router.post("/voice-query")
+async def voice_query(audio: UploadFile):
+    """
+    Endpoint to handle voice queries (Speech-to-Text -> RAG -> Text-to-Speech)
+    """
+    logger.info("Received voice query request")
+    audio_bytes = await audio.read()
+    
+    result = voice_use_case.execute(audio_bytes)
+    
+    return {
+        "query": result["query"],
+        "answer": result["answer"]
+    }
