@@ -1,7 +1,7 @@
 /* ChatInput.module.css */
 
 .container {
-  padding: 16px 24px 24px;
+  padding: var(--space-4) var(--space-5) var(--space-5);
   background: linear-gradient(to top, var(--chat-bg) 70%, transparent);
   flex-shrink: 0;
 }
@@ -14,14 +14,16 @@
   border: 1px solid var(--input-border);
   border-radius: 24px;
   padding: 6px 6px 6px 18px;
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  transition: border-color var(--transition-speed), box-shadow var(--transition-speed);
+  transition: border-color var(--duration-2) var(--ease-out),
+    box-shadow var(--duration-2) var(--ease-out),
+    transform var(--duration-2) var(--ease-out),
+    background var(--duration-2) var(--ease-out);
 }
 
 .inputRow:focus-within {
   border-color: var(--input-hover-border);
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.14);
+  transform: translateY(-1px);
 }
 
 .textarea {
@@ -55,14 +57,21 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all var(--transition-speed);
+  transition: transform var(--duration-2) var(--ease-out),
+    background var(--duration-2) var(--ease-out),
+    box-shadow var(--duration-2) var(--ease-out),
+    filter var(--duration-2) var(--ease-out);
   flex-shrink: 0;
 }
 
 .sendBtn:hover:not(:disabled) {
   background: var(--accent-hover);
-  transform: scale(1.08);
-  box-shadow: 0 4px 16px rgba(37, 99, 235, 0.5);
+  transform: translateY(-1px) scale(1.06);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.22);
+}
+
+.sendBtn:active:not(:disabled) {
+  transform: translateY(0) scale(1.02);
 }
 
 .sendBtn:disabled {
@@ -77,4 +86,10 @@
   text-align: center;
   margin-top: 8px;
   opacity: 0.6;
+}
+
+@media (max-width: 720px) {
+  .container {
+    padding: var(--space-4) var(--space-4) var(--space-4);
+  }
 }

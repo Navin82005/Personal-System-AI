@@ -1,11 +1,13 @@
+const BASE_URL = 'http://127.0.0.1:8000';
+
 export const sendMessageToBackend = async (message) => {
   try {
-    const response = await fetch('http://127.0.0.1:8000/query', {
+    const response = await fetch(`${BASE_URL}/query`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ query: message }),
+      body: JSON.stringify({ query: message, "top_k": 6 }),
     });
 
     if (!response.ok) {
@@ -22,7 +24,7 @@ export const sendMessageToBackend = async (message) => {
 
 export const scanFolder = async (folderPath) => {
   try {
-    const response = await fetch('http://127.0.0.1:8000/scan-folder', {
+    const response = await fetch(`${BASE_URL}/scan-folder`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -42,3 +44,38 @@ export const scanFolder = async (folderPath) => {
   }
 };
 
+export const cancelIndexJob = async (jobId) => {
+  const res = await fetch(`${BASE_URL}/progress/${encodeURIComponent(jobId)}/cancel`, { method: 'POST' });
+  if (!res.ok) throw new Error(`Cancel failed: ${res.status}`);
+  return res.json();
+};
+
+export const fetchProgress = async (jobId) => {
+  const res = await fetch(`${BASE_URL}/progress/${encodeURIComponent(jobId)}`);
+  if (!res.ok) throw new Error(`Progress error: ${res.status}`);
+  return res.json();
+};
+
+export const fetchInsightsSummary = async () => {
+  const res = await fetch(`${BASE_URL}/insights/summary`);
+  if (!res.ok) throw new Error(`Insights summary error: ${res.status}`);
+  return res.json();
+};
+
+export const fetchInsightsContentDistribution = async () => {
+  const res = await fetch(`${BASE_URL}/insights/content-distribution`);
+  if (!res.ok) throw new Error(`Insights distribution error: ${res.status}`);
+  return res.json();
+};
+
+export const fetchInsightsRecentFiles = async (limit = 10) => {
+  const res = await fetch(`${BASE_URL}/insights/recent-files?limit=${encodeURIComponent(limit)}`);
+  if (!res.ok) throw new Error(`Insights recent files error: ${res.status}`);
+  return res.json();
+};
+
+export const fetchInsightsSizeDistribution = async () => {
+  const res = await fetch(`${BASE_URL}/insights/size-distribution`);
+  if (!res.ok) throw new Error(`Insights size distribution error: ${res.status}`);
+  return res.json();
+};

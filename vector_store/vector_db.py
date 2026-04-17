@@ -33,7 +33,13 @@ class VectorDB:
         embedding = response.json()["embedding"]
         return embedding
 
-    def add_chunks(self, chunks: list[DocumentChunk], source: str):
+    def add_chunks(
+        self,
+        chunks: list[DocumentChunk],
+        source: str,
+        progress_cb=None,
+        should_cancel=None,
+    ):
         print(f"DEBUG: VectorDB add_chunks: received {len(chunks)} chunks for source: {source}")
         if not chunks:
             print("DEBUG: VectorDB add_chunks: no chunks to add, returning")
@@ -45,14 +51,21 @@ class VectorDB:
         ids = []
         
         for i, chunk in enumerate(chunks):
+            if should_cancel and should_cancel():
+                raise RuntimeError("cancelled")
             documents.append(chunk.text)
             embedding.append(self._get_embedding(chunk.text))
             metadata = chunk.metadata.copy()
             metadata["source"] = source
             metadatas.append(metadata)
             ids.append(f"{source}_{i}")
+
+            if progress_cb:
+                progress_cb({"file_chunks_done": i + 1, "file_chunks_total": len(chunks)})
             
         # Add to collection (Chroma handles embedding under the hood via the embedding_fn)
+        if progress_cb:
+            progress_cb({"status": "indexing", "message": "Writing vectors to database..."})
         self.collection.add(
             embeddings=embedding,
             documents=documents,
@@ -128,4 +141,3 @@ class VectorDB:
         data = self.collection.get(include=["documents", "metadatas"])
         print(f"DEBUG: VectorDB get_all_data called -> {data}")
         return data
-

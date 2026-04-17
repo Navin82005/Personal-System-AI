@@ -1,8 +1,15 @@
 import styles from './Sidebar.module.css';
-import { PlusIcon, ChatIcon, SparklesIcon } from '../shared/Icons';
-import FolderScan from './FolderScan';
+import { PlusIcon, ChatIcon, SparklesIcon, InsightsIcon, FolderIcon } from '../shared/Icons';
 
-export default function Sidebar({ sessions, activeSessionId, onSelectSession, onNewChat, isCollapsed }) {
+export default function Sidebar({
+  sessions,
+  activeSessionId,
+  onSelectSession,
+  onNewChat,
+  isCollapsed,
+  activeView,
+  onNavigate,
+}) {
   return (
     <aside className={`${styles.sidebar} ${isCollapsed ? styles.collapsed : ''}`}>
       {/* Logo */}
@@ -13,29 +20,69 @@ export default function Sidebar({ sessions, activeSessionId, onSelectSession, on
         <span className={styles.logoText}>Personal AI</span>
       </div>
 
-      {/* New Chat */}
-      <button className={styles.newChatBtn} onClick={onNewChat}>
-        <PlusIcon size={15} />
-        New Chat
-      </button>
+      {/* Primary navigation */}
+      <div className={styles.primaryNav}>
+        <button
+          type="button"
+          className={`${styles.navItem} ${activeView === 'chat' ? styles.active : ''}`}
+          onClick={() => onNavigate?.('chat')}
+        >
+          <span className={styles.sessionIcon}>
+            <ChatIcon size={14} />
+          </span>
+          <span className={styles.sessionTitle}>Chat</span>
+        </button>
 
-      {/* Folder Indexing */}
-      <FolderScan />
+        <button
+          type="button"
+          className={`${styles.navItem} ${activeView === 'insights' ? styles.active : ''}`}
+          onClick={() => onNavigate?.('insights')}
+        >
+          <span className={styles.sessionIcon}>
+            <InsightsIcon size={14} />
+          </span>
+          <span className={styles.sessionTitle}>Insights</span>
+        </button>
+
+        <button
+          type="button"
+          className={`${styles.navItem} ${activeView === 'indexing' ? styles.active : ''}`}
+          onClick={() => onNavigate?.('indexing')}
+        >
+          <span className={styles.sessionIcon}>
+            <FolderIcon size={14} />
+          </span>
+          <span className={styles.sessionTitle}>Indexing</span>
+        </button>
+      </div>
 
       {/* Sessions */}
-      <span className={styles.sectionLabel}>Recent</span>
+      <div className={styles.sessionsHeader}>
+        <span className={styles.sectionLabel}>Chats</span>
+        <button className={styles.newChatBtn} onClick={onNewChat} type="button" title="New chat">
+          <PlusIcon size={15} />
+          New
+        </button>
+      </div>
       <div className={styles.sessionList}>
         {sessions.map((session) => (
-          <div
+          <button
             key={session.id}
-            className={`${styles.sessionItem} ${session.id === activeSessionId ? styles.active : ''}`}
-            onClick={() => onSelectSession(session.id)}
+            type="button"
+            className={`${styles.sessionItem} ${activeView === 'chat' && session.id === activeSessionId ? styles.active : ''
+              }`}
+            onClick={() => {
+              onSelectSession(session.id);
+              onNavigate?.('chat');
+            }}
+            aria-current={activeView === 'chat' && session.id === activeSessionId ? 'page' : undefined}
+            title={session.title}
           >
             <span className={styles.sessionIcon}>
               <ChatIcon size={14} />
             </span>
             <span className={styles.sessionTitle}>{session.title}</span>
-          </div>
+          </button>
         ))}
       </div>
 

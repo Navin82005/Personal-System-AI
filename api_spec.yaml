@@ -12,8 +12,8 @@ paths:
     post:
       summary: Scan and Index Folder
       description: |
-        Endpoint to trigger folder scanning and indexing. It recursively reads supported 
-        files in the specified directory, chunks them, and stores the embeddings in ChromaDB.
+        Starts an async folder scan/indexing job. Use the progress endpoints (REST or WebSocket)
+        to track real-time progress.
       operationId: scan_folder
       requestBody:
         required: true
@@ -23,17 +23,51 @@ paths:
               $ref: '#/components/schemas/ScanRequest'
       responses:
         '200':
-          description: Successful scan operation
+          description: Job created
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ScanResponse'
+                $ref: '#/components/schemas/ScanJobResponse'
         '400':
           description: Bad Request (Directory not found or scan failure)
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+
+  /progress/{job_id}:
+    get:
+      summary: Get Job Progress (REST fallback)
+      operationId: get_progress
+      parameters:
+        - in: path
+          name: job_id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Current job progress payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProgressPayload'
+        '404':
+          description: Unknown job
+
+  /progress/{job_id}/cancel:
+    post:
+      summary: Cancel Job
+      operationId: cancel_progress
+      parameters:
+        - in: path
+          name: job_id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Cancel requested
 
   /query:
     post:
@@ -81,21 +115,49 @@ components:
           description: Absolute path to the folder to be scanned.
           example: "/Users/naveenn/Documents/Projects/Personal System AI/test_data"
 
-    ScanResponse:
+    ScanJobResponse:
+      type: object
+      required:
+        - job_id
+      properties:
+        job_id:
+          type: string
+          example: "a7f2c9f59f9b4d49b6a8f1b0840d0f6a"
+
+    ProgressPayload:
       type: object
       properties:
-        status:
+        job_id:
           type: string
-          example: "success"
-        total_files_found:
+        progress_percentage:
           type: integer
-          example: 5
+        current_file:
+          type: string
+          nullable: true
         processed_files:
           type: integer
-          example: 4
-        failed_files:
+        total_files:
           type: integer
-          example: 1
+        status:
+          type: string
+          example: "embedding"
+        message:
+          type: string
+        file_chunks_done:
+          type: integer
+        file_chunks_total:
+          type: integer
+        logs:
+          type: array
+          items:
+            type: object
+            properties:
+              ts:
+                type: number
+              message:
+                type: string
+              status:
+                type: string
 
     QueryRequest:
       type: object

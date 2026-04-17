@@ -76,13 +76,14 @@ export default function ChatWindow({ session, onAddMessage, isLoading, setIsLoad
           </p>
           <div className={styles.suggestionsGrid}>
             {SUGGESTIONS.map((s, i) => (
-              <div
+              <button
                 key={i}
+                type="button"
                 className={styles.suggestionCard}
                 onClick={() => handleSend(s.replace(/^[\p{Emoji}\s]+/u, '').trim())}
               >
                 {s}
-              </div>
+              </button>
             ))}
           </div>
         </div>

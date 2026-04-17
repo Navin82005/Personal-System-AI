@@ -14,11 +14,9 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 24px;
+  padding: var(--space-4) var(--space-5);
   border-bottom: 1px solid var(--sidebar-border);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  background: rgba(30, 30, 30, 0.7);
+  background: var(--surface-2);
   flex-shrink: 0;
   z-index: 10;
 }
@@ -33,19 +31,29 @@
   width: 36px;
   height: 36px;
   border-radius: var(--border-radius-sm);
-  background: rgba(255, 255, 255, 0.07);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border);
   color: var(--text-secondary);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all var(--transition-speed);
+  transition: transform var(--duration-2) var(--ease-out),
+    background var(--duration-2) var(--ease-out),
+    border-color var(--duration-2) var(--ease-out),
+    color var(--duration-2) var(--ease-out),
+    box-shadow var(--duration-2) var(--ease-out);
 }
 
 .toggleBtn:hover {
-  background: rgba(255, 255, 255, 0.13);
+  background: rgba(255, 255, 255, 0.07);
+  border-color: var(--border-strong);
   color: var(--text-primary);
+  transform: translateY(-1px);
+}
+
+.toggleBtn:active {
+  transform: translateY(0);
 }
 
 .headerTitle {
@@ -62,9 +70,9 @@
   font-size: 11px;
   padding: 3px 10px;
   border-radius: 20px;
-  background: rgba(37, 99, 235, 0.15);
-  border: 1px solid rgba(37, 99, 235, 0.3);
-  color: #60a5fa;
+  background: rgba(59, 130, 246, 0.12);
+  border: 1px solid rgba(59, 130, 246, 0.28);
+  color: rgba(147, 197, 253, 0.95);
   font-weight: 600;
 }
 
@@ -74,36 +82,40 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 40px 24px;
-  gap: 24px;
+  padding: 44px var(--space-5);
+  gap: 22px;
   text-align: center;
+  animation: welcomeIn var(--duration-3) var(--ease-emphasized) both;
+}
+
+@keyframes welcomeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .welcomeGlow {
   width: 80px;
   height: 80px;
   border-radius: 24px;
-  background: linear-gradient(135deg, #2563eb, #7c3aed);
+  background: var(--surface-1);
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 0 60px rgba(37, 99, 235, 0.35);
-  animation: pulse 3s ease-in-out infinite;
-}
-
-@keyframes pulse {
-  0%, 100% { box-shadow: 0 0 40px rgba(37, 99, 235, 0.35); }
-  50% { box-shadow: 0 0 80px rgba(124, 58, 237, 0.5); }
+  border: 1px solid var(--border);
 }
 
 .welcomeTitle {
   font-size: 28px;
   font-weight: 700;
-  background: linear-gradient(135deg, #ffffff 30%, #93c5fd);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: var(--text-primary);
   margin: 0;
+  letter-spacing: -0.6px;
 }
 
 .welcomeSubtitle {
@@ -125,20 +137,50 @@
 
 .suggestionCard {
   padding: 14px 16px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--surface-1);
+  border: 1px solid var(--border);
   border-radius: var(--border-radius-md);
   text-align: left;
   cursor: pointer;
-  transition: all var(--transition-speed);
+  transition: transform var(--duration-2) var(--ease-out),
+    background var(--duration-2) var(--ease-out),
+    border-color var(--duration-2) var(--ease-out),
+    box-shadow var(--duration-2) var(--ease-out),
+    color var(--duration-2) var(--ease-out);
   color: var(--text-secondary);
   font-size: 13px;
   line-height: 1.5;
+  width: 100%;
+  font-family: var(--font-family);
+  appearance: none;
 }
 
 .suggestionCard:hover {
-  background: rgba(37, 99, 235, 0.1);
-  border-color: rgba(37, 99, 235, 0.3);
+  background: rgba(255, 255, 255, 0.03);
+  border-color: var(--border-strong);
   color: var(--text-primary);
   transform: translateY(-2px);
+}
+
+.suggestionCard:active {
+  transform: translateY(-1px);
+}
+
+@media (max-width: 720px) {
+  .header {
+    padding: var(--space-4) var(--space-4);
+  }
+
+  .headerTitle {
+    max-width: 180px;
+  }
+
+  .welcomeScreen {
+    padding: 40px var(--space-4);
+  }
+
+  .suggestionsGrid {
+    grid-template-columns: 1fr;
+    max-width: 520px;
+  }
 }

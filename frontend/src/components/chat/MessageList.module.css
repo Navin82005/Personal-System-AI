@@ -3,10 +3,10 @@
 .list {
   flex: 1;
   overflow-y: auto;
-  padding: 24px 0;
+  padding: var(--space-5) 0;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: var(--space-3);
   scroll-behavior: smooth;
 }
 
@@ -14,7 +14,13 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 8px 24px;
+  padding: var(--space-2) var(--space-5);
+}
+
+@media (max-width: 720px) {
+  .dayDivider {
+    padding: var(--space-2) var(--space-4);
+  }
 }
 
 .line {

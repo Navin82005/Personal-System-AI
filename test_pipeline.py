@@ -18,8 +18,15 @@ def test_pipeline():
         json={"folder_path": "/Users/naveenn/Documents/Projects/Personal System AI/test_data"}
     )
     print("Scan Response:", resp.json())
-    
-    time.sleep(2)
+    job_id = resp.json().get("job_id")
+    if job_id:
+        # Wait up to ~2 minutes for completion.
+        for _ in range(120):
+            st = requests.get(f"{BASE_URL}/progress/{job_id}").json()
+            print("Progress:", st.get("status"), st.get("progress_percentage"), st.get("message"))
+            if st.get("status") in {"completed", "cancelled", "error"}:
+                break
+            time.sleep(1)
     
     print("\n2. Getting documents...")
     resp = requests.get(f"{BASE_URL}/documents")

@@ -2,6 +2,9 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from api.chat_routes import router as chat_router
 from api.livekit_routes import router as livekit_router
+from api.insights_routes import router as insights_router
+from api.progress_routes import router as progress_router
+from infrastructure.progress.global_progress import init_progress_system
 from utils.logging import setup_logger
 
 logger = setup_logger("main")
@@ -19,6 +22,13 @@ app.add_middleware(
 
 app.include_router(chat_router)
 app.include_router(livekit_router)
+app.include_router(insights_router)
+app.include_router(progress_router)
+
+
+@app.on_event("startup")
+async def _startup():
+    init_progress_system()
 
 @app.get("/")
 def root():

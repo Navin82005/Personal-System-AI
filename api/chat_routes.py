@@ -1,3 +1,4 @@
+import asyncio
 from fastapi import APIRouter, HTTPException, UploadFile
 from pydantic import BaseModel
 from typing import List
@@ -13,6 +14,7 @@ from application.use_cases.voice_query import VoiceQueryUseCase
 from application.use_cases.query_rag import RagPipeline
 from infrastructure.stt.whisper_service import WhisperService
 from infrastructure.tts.fish_speech_service import FishSpeechService
+from infrastructure.progress.global_progress import progress_manager
 
 logger = setup_logger("chat_routes")
 router = APIRouter()
@@ -38,15 +40,20 @@ class QueryResponse(BaseModel):
     relevant_chunks: List[str] = []
 
 @router.post("/scan-folder")
-def scan_folder_endpoint(req: ScanRequest):
+async def scan_folder_endpoint(req: ScanRequest):
     """
     Endpoint to trigger folder scanning and indexing.
     """
     logger.info(f"Received request to scan folder: {req.folder_path}")
-    result = ingest_folder(req.folder_path, vector_db)
-    if "error" in result:
-        raise HTTPException(status_code=400, detail=result["error"])
-    return result
+    job_id, token = progress_manager.create_job()
+
+    async def runner():
+        # Run the blocking pipeline off the event loop.
+        return await asyncio.to_thread(ingest_folder, req.folder_path, vector_db, job_id=job_id, cancel_token=token)
+
+    task = asyncio.create_task(runner())
+    progress_manager.attach_task(job_id, task)
+    return {"job_id": job_id}
 
 @router.post("/query", response_model=QueryResponse)
 def query_endpoint(req: QueryRequest):
