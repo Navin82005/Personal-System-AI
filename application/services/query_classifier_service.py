@@ -29,6 +29,12 @@ class QueryClassifierService:
         re.I,
     )
     _summary_re = re.compile(r"\b(summarize|summary|overview|what is in)\b", re.I)
+    _meta_db_re = re.compile(
+        r"\b(what data do you contain|what do you contain|what is stored|what kind of information|"
+        r"what's in (the )?(db|database)|summarize my (uploaded|indexed) (documents|files)|"
+        r"summarize my documents|what documents are indexed|list (the )?indexed (documents|files))\b",
+        re.I,
+    )
     _vague_re = re.compile(r"\b(it|this|that|those|them)\b", re.I)
     _vague_verb_re = re.compile(r"^\s*(explain|summarize|tell me about|describe)\b", re.I)
     _out_of_scope_re = re.compile(
@@ -59,6 +65,10 @@ class QueryClassifierService:
             res = ClassificationResult(category="OUT_OF_SCOPE", confidence_score=0.8)
             return self._set_cache(q, res)
 
+        if self._meta_db_re.search(q):
+            res = ClassificationResult(category="META_DB_QUERY", confidence_score=0.85)
+            return self._set_cache(q, res)
+
         query_type, target_file = analyze_query(q)
         if query_type == "file_specific_query" and target_file:
             res = ClassificationResult(category="SPECIFIC_RAG_QUERY", confidence_score=0.9)
@@ -75,10 +85,6 @@ class QueryClassifierService:
         # RAG-context: about "the documents / the db".
         if self._summary_re.search(q) and self._rag_context_re.search(q):
             res = ClassificationResult(category="RAG_CONTEXT_QUERY", confidence_score=0.85)
-            return self._set_cache(q, res)
-
-        if self._rag_context_re.search(q) and self._summary_re.search(q):
-            res = ClassificationResult(category="RAG_CONTEXT_QUERY", confidence_score=0.8)
             return self._set_cache(q, res)
 
         # Generic "what's in the db" without explicit keywords.

@@ -141,3 +141,40 @@ class VectorDB:
         data = self.collection.get(include=["documents", "metadatas"])
         print(f"DEBUG: VectorDB get_all_data called -> {data}")
         return data
+
+    def count(self) -> int:
+        try:
+            return int(self.collection.count())
+        except Exception:
+            return 0
+
+    def sample_chunks(self, *, limit: int = 60, offset: int = 0) -> list[dict]:
+        """
+        Sample chunks from the collection without semantic search (useful for meta DB summaries).
+        """
+        try:
+            data = self.collection.get(include=["documents", "metadatas"], limit=limit, offset=offset)
+        except Exception:
+            return []
+        docs = data.get("documents", []) or []
+        metas = data.get("metadatas", []) or []
+        out = []
+        for doc, meta in zip(docs, metas):
+            out.append({"text": doc, "metadata": meta or {}})
+        return out
+
+    def chunks_for_source(self, source: str, *, limit: int = 1) -> list[dict]:
+        try:
+            data = self.collection.get(
+                include=["documents", "metadatas"],
+                where={"source": source},
+                limit=limit,
+            )
+        except Exception:
+            return []
+        docs = data.get("documents", []) or []
+        metas = data.get("metadatas", []) or []
+        out = []
+        for doc, meta in zip(docs, metas):
+            out.append({"text": doc, "metadata": meta or {}})
+        return out

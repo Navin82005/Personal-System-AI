@@ -50,6 +50,16 @@ class IndexMetadataStore:
             conn.execute("CREATE INDEX IF NOT EXISTS idx_file_type ON indexed_files(file_type)")
             conn.execute("CREATE INDEX IF NOT EXISTS idx_size_bytes ON indexed_files(size_bytes)")
 
+            conn.execute(
+                """
+                CREATE TABLE IF NOT EXISTS db_summary (
+                  key TEXT PRIMARY KEY,
+                  summary_json TEXT NOT NULL,
+                  updated_at REAL NOT NULL
+                )
+                """
+            )
+
     def upsert_indexed_file(
         self,
         *,
@@ -175,3 +185,48 @@ class IndexMetadataStore:
                 "gt_10mb": counts.get("gt_10mb", 0),
                 "unknown": counts.get("unknown", 0),
             }
+
+    def get_db_summary(self, *, max_age_seconds: int = 300) -> Optional[Dict[str, Any]]:
+        import json
+        import time
+
+        with self._connect() as conn:
+            row = conn.execute("SELECT summary_json, updated_at FROM db_summary WHERE key='db_summary'").fetchone()
+            if not row:
+                return None
+            if (time.time() - float(row["updated_at"])) > max_age_seconds:
+                return None
+            try:
+                return json.loads(row["summary_json"])
+            except Exception:
+                return None
+
+    def set_db_summary(self, summary: Dict[str, Any]) -> None:
+        import json
+        import time
+
+        with self._connect() as conn:
+            conn.execute(
+                "INSERT INTO db_summary(key, summary_json, updated_at) VALUES('db_summary', ?, ?) "
+                "ON CONFLICT(key) DO UPDATE SET summary_json=excluded.summary_json, updated_at=excluded.updated_at",
+                (json.dumps(summary), time.time()),
+            )
+
+    def compute_db_summary(self) -> Dict[str, Any]:
+        """
+        Lightweight snapshot used for meta DB queries.
+        """
+        return {
+            "summary": self.summary(),
+            "content_distribution": self.content_distribution_counts(),
+            "size_distribution": self.size_distribution(),
+            "recent_files": self.recent_files(limit=10),
+        }
+
+    def sample_sources_by_type(self, file_type: str, limit: int = 2) -> List[str]:
+        with self._connect() as conn:
+            rows = conn.execute(
+                "SELECT source FROM indexed_files WHERE file_type = ? ORDER BY indexed_at DESC LIMIT ?",
+                (file_type, limit),
+            ).fetchall()
+            return [r["source"] for r in rows]

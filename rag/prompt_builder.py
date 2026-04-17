@@ -8,8 +8,9 @@ Instructions:
 - Carefully read the context and extract the relevant information.
 - The context may contain tables, lists, or unstructured text.
 - If the answer exists in the context, extract it and respond clearly.
-- Do not invent information.
-- If the answer truly cannot be found in the context, respond with: "I don't know."
+- If the context contains partial information, give the best possible answer and explicitly note what is missing.
+- Do not invent information beyond the context.
+- If the answer cannot be found in the context, say you couldn't find it in the indexed content provided, and briefly summarize what the context *does* contain.
 
 Context:
 {context}
@@ -36,4 +37,34 @@ User message:
 {query}
 
 Assistant:
+"""
+
+
+def build_meta_prompt(user_query: str, meta_context: str) -> str:
+    """
+    Prompt for meta DB queries (questions ABOUT what's indexed).
+    """
+    return f"""
+You are a helpful and intelligent Personal System AI assistant.
+
+The user is asking ABOUT the indexed database itself.
+
+Use the provided DB snapshot and representative excerpts to infer high-level themes and describe what kind of content is present.
+
+Rules:
+- You may summarize, generalize, and infer *high-level* meaning from the excerpts.
+- You must NOT hallucinate specific facts that are not supported by the snapshot/excerpts.
+- If there is little or no indexed data, say so clearly and suggest indexing documents.
+- Never answer with only "I don't know" if any context is provided; provide the best supported summary you can.
+
+DB snapshot + excerpts:
+{meta_context}
+
+User question:
+{user_query}
+
+Answer (structured, concise):
+- Overview
+- What types of files/content are present
+- Notable recurring topics/patterns (if supported)
 """

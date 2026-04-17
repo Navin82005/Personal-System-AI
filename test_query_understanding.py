@@ -18,6 +18,10 @@ class TestQueryUnderstanding(unittest.TestCase):
         c = QueryClassifierService().classify("summarize the indexed documents")
         self.assertEqual(c.category, "RAG_CONTEXT_QUERY")
 
+    def test_classify_meta_db(self):
+        c = QueryClassifierService().classify("What data do you contain?")
+        self.assertEqual(c.category, "META_DB_QUERY")
+
     def test_classify_specific_file(self):
         c = QueryClassifierService().classify("what does it say in architecture_notes.md?")
         self.assertEqual(c.category, "SPECIFIC_RAG_QUERY")
@@ -31,4 +35,3 @@ class TestQueryUnderstanding(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-

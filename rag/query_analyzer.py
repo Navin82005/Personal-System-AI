@@ -24,7 +24,7 @@ def analyze_query(query: str) -> Tuple[str, Optional[str]]:
     pattern = rf"\b([a-zA-Z0-9_\-\.]+(?:{ext_pattern}))\b"
     
     match = re.search(pattern, query, re.IGNORECASE)
-    print("DEBUG:", match, query, ext_pattern, pattern)
+    logger.debug(f"analyze_query match={bool(match)} pattern={pattern}")
 
     if match:
         file_name = match.group(1).strip()

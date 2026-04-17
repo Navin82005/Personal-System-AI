@@ -142,6 +142,12 @@ def ingest_folder(
             "failed_files": failed_files,
         }
 
+    # Update the snapshot cache for meta DB queries.
+    try:
+        metadata_store.set_db_summary(metadata_store.compute_db_summary())
+    except Exception:
+        pass
+
     emit(
         {
             "status": "completed",
@@ -174,6 +180,7 @@ def get_file_metadata(file_path: str):
 
     metadata = {
         "file_name": os.path.basename(file_path),
+        "source_name": os.path.basename(file_path),
         "file_path": os.path.abspath(file_path),
         "file_ext": ext,
         "file_type": categorize_file_type(ext),

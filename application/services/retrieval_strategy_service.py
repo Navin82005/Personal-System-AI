@@ -43,6 +43,10 @@ class RetrievalStrategyService:
         # Map categories to baseline top_k.
         if category == "RAG_CONTEXT_QUERY":
             top_k = 7
+        elif category == "META_DB_QUERY":
+            # Meta queries use a separate context builder; keep RAG enabled but allow the orchestrator
+            # to swap retrieval mode. Use a larger cap for meta sampling.
+            top_k = 12
         elif category == "SPECIFIC_RAG_QUERY":
             top_k = 4
         elif category == "VAGUE_QUERY":
@@ -57,7 +61,8 @@ class RetrievalStrategyService:
             except Exception:
                 pass
 
-        top_k = max(3, min(self.max_top_k, top_k))
+        cap = 20 if category == "META_DB_QUERY" else self.max_top_k
+        top_k = max(3, min(cap, top_k))
 
         # File-specific filter if present and indexed.
         where_filter = None
