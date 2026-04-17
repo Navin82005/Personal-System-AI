@@ -20,3 +20,20 @@ Question:
 Answer:
 """
     return prompt
+
+
+def build_chat_prompt(query: str) -> str:
+    """
+    Prompt for non-RAG responses (general chat / greetings / out-of-scope).
+    """
+    return f"""
+You are a helpful Personal System AI assistant.
+
+Respond conversationally and directly. If the user asks for actions you cannot perform (like sending emails),
+explain the limitation and offer what you *can* do.
+
+User message:
+{query}
+
+Assistant:
+"""

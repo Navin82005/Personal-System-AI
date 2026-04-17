@@ -4,11 +4,8 @@ from pydantic import BaseModel
 from typing import List
 from ingestion.embedding_pipeline import ingest_folder
 from vector_store.vector_db import VectorDB
-from rag.retriever import retrieve_context
-from rag.prompt_builder import build_prompt
-from rag.generator import generate_answer
-from rag.query_analyzer import analyze_query
 from utils.logging import setup_logger
+from application.services.response_orchestrator import ResponseOrchestrator
 
 from application.use_cases.voice_query import VoiceQueryUseCase
 from application.use_cases.query_rag import RagPipeline
@@ -19,6 +16,7 @@ from infrastructure.progress.global_progress import progress_manager
 logger = setup_logger("chat_routes")
 router = APIRouter()
 vector_db = VectorDB()
+orchestrator = ResponseOrchestrator(vector_db=vector_db)
 
 # Initialize Voice Query services
 rag_pipeline = RagPipeline(vector_db)
@@ -60,42 +58,14 @@ def query_endpoint(req: QueryRequest):
     """
     Endpoint to ask questions based on indexed documents.
     """
-    print(f"DEBUG: Processing query endpoint for: {req.query}")
     logger.info(f"Received query: {req.query}")
-    
-    # 1. Check if it is a file-specific query
-    query_type, target_file = analyze_query(req.query)
-    
-    where_filter = None
-    if query_type == "file_specific_query" and target_file:
-        # Validate that the file exists in the index
-        if not vector_db.has_file(target_file):
-            return QueryResponse(
-                answer=f"File '{target_file}' is not indexed. Please run folder scan.",
-                source_file=target_file,
-                relevant_chunks=[]
-            )
-        where_filter = {"file_name": target_file}
-    
-    # 2. Retrieve
-    print(f"DEBUG: Calling retrieve_context with target_file={target_file}")
-    retrieval_data = retrieve_context(req.query, vector_db, top_k=req.top_k, where=where_filter)
-    context_str = retrieval_data["context_str"]
-    sources = retrieval_data["sources"]
-    print(f"DEBUG: Retrieved {len(sources)} sources")
-    
-    # 3. Build prompt
-    prompt = build_prompt(req.query, context_str)
-    
-    # 4. Generate answer
-    print("DEBUG: Calling generate_answer")
-    answer = generate_answer(prompt)
-    print("DEBUG: Received answer from generator")
-    
+
+    result = orchestrator.handle_user_query(req.query, client_top_k=req.top_k)
+    source_file = result.sources[0] if result.sources else None
     return QueryResponse(
-        answer=answer, 
-        source_file=target_file if query_type == "file_specific_query" else (sources[0] if sources else None),
-        relevant_chunks=context_str.split("\\n---\\n") if context_str else []
+        answer=result.answer,
+        source_file=source_file,
+        relevant_chunks=result.relevant_chunks,
     )
 
 @router.get("/documents")
