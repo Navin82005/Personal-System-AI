@@ -1,9 +1,11 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import MessageList from './MessageList';
 import ChatInput from './ChatInput';
 import styles from './ChatWindow.module.css';
-import { MenuIcon, BrainIcon } from '../shared/Icons';
+import { MenuIcon, BrainIcon, MicIcon, MicOffIcon } from '../shared/Icons';
 import { sendMessageToBackend } from '../../services/api';
+import { fetchLivekitToken, startVoiceSession, stopVoiceSession } from '../../services/api';
+import { livekitVoiceService } from '../../services/voice/livekitVoiceService';
 
 const SUGGESTIONS = [
   '📄 Summarize my uploaded documents',
@@ -14,6 +16,41 @@ const SUGGESTIONS = [
 
 export default function ChatWindow({ session, onAddMessage, isLoading, setIsLoading, onToggleSidebar }) {
   const hasMessages = session?.messages?.length > 0;
+  const [voiceEnabled, setVoiceEnabled] = useState(false);
+  const [voiceStatus, setVoiceStatus] = useState('idle'); // idle | listening | processing | speaking
+  const [liveTranscript, setLiveTranscript] = useState('');
+
+  const roomName = useMemo(() => (session?.id ? `psai-${session.id}` : 'psai-default'), [session?.id]);
+
+  useEffect(() => {
+    const unsub = livekitVoiceService.subscribe((evt) => {
+      if (evt?.type === 'status') {
+        setVoiceStatus(evt.status || 'idle');
+      }
+      if (evt?.type === 'transcript') {
+        setLiveTranscript(evt.text || '');
+        if (evt.is_final && evt.text) {
+          onAddMessage({
+            id: Date.now(),
+            sender: 'user',
+            text: evt.text,
+            timestamp: Date.now(),
+          });
+        }
+      }
+      if (evt?.type === 'assistant_text') {
+        if (evt.text) {
+          onAddMessage({
+            id: Date.now() + 1,
+            sender: 'ai',
+            text: evt.text,
+            timestamp: Date.now(),
+          });
+        }
+      }
+    });
+    return () => unsub();
+  }, [onAddMessage]);
 
   const handleSend = async (text) => {
     const userMsg = {
@@ -48,6 +85,46 @@ export default function ChatWindow({ session, onAddMessage, isLoading, setIsLoad
     }
   };
 
+  const handleToggleVoice = async () => {
+    try {
+      if (voiceEnabled) {
+        setVoiceEnabled(false);
+        setVoiceStatus('idle');
+        setLiveTranscript('');
+        try {
+          await stopVoiceSession(roomName);
+        } catch (_) {
+          // ignore
+        }
+        await livekitVoiceService.disconnect();
+        return;
+      }
+
+      setVoiceEnabled(true);
+      setVoiceStatus('processing');
+      setLiveTranscript('');
+
+      await startVoiceSession(roomName); // ensure backend agent is running
+
+      const participantName = `user-${Math.random().toString(16).slice(2, 8)}`;
+      const tok = await fetchLivekitToken(roomName, participantName);
+      const livekitUrl = import.meta.env.VITE_LIVEKIT_URL;
+      if (!livekitUrl) throw new Error('VITE_LIVEKIT_URL is not set');
+      await livekitVoiceService.connect({ livekitUrl, token: tok.token });
+    } catch (e) {
+      setVoiceEnabled(false);
+      setVoiceStatus('idle');
+      setLiveTranscript('');
+      onAddMessage({
+        id: Date.now() + 2,
+        sender: 'ai',
+        text: `Voice error: ${e?.message || 'Unable to start voice session.'}`,
+        timestamp: Date.now(),
+        isError: true,
+      });
+    }
+  };
+
   return (
     <div className={styles.container}>
       {/* Header */}
@@ -60,7 +137,24 @@ export default function ChatWindow({ session, onAddMessage, isLoading, setIsLoad
             {session?.title || 'New Chat'}
           </span>
         </div>
-        <span className={styles.headerBadge}>● Online</span>
+        <div className={styles.headerRight}>
+          {voiceEnabled ? (
+            <span className={styles.voicePill}>
+              {voiceStatus}
+              {liveTranscript ? ` · ${liveTranscript}` : ''}
+            </span>
+          ) : null}
+          <button
+            type="button"
+            className={styles.voiceBtn}
+            onClick={handleToggleVoice}
+            aria-label={voiceEnabled ? 'Disable voice' : 'Enable voice'}
+            title={voiceEnabled ? 'Disable voice' : 'Enable voice'}
+          >
+            {voiceEnabled ? <MicOffIcon size={16} /> : <MicIcon size={16} />}
+          </button>
+          <span className={styles.headerBadge}>● Online</span>
+        </div>
       </div>
 
       {/* Welcome Screen or Chat */}

@@ -70,3 +70,24 @@ export const FolderIcon = ({ size = 16 }) => (
     <path d="M3 7a2 2 0 012-2h5l2 2h9a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V7z" />
   </svg>
 );
+
+export const MicIcon = ({ size = 16 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M12 14a3 3 0 003-3V6a3 3 0 10-6 0v5a3 3 0 003 3z" />
+    <path d="M19 11a7 7 0 01-14 0" />
+    <path d="M12 18v3" />
+    <path d="M8 21h8" />
+  </svg>
+);
+
+export const MicOffIcon = ({ size = 16 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M9 9v2a3 3 0 004.12 2.78" />
+    <path d="M12 14a3 3 0 003-3V7" />
+    <path d="M19 11a7 7 0 01-4 6.29" />
+    <path d="M5 11a7 7 0 006.7 7" />
+    <path d="M12 18v3" />
+    <path d="M8 21h8" />
+    <path d="M3 3l18 18" />
+  </svg>
+);

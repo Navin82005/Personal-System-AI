@@ -69,6 +69,42 @@ paths:
         '200':
           description: Cancel requested
 
+  /voice/session/start:
+    post:
+      summary: Start LiveKit Voice Session Agent
+      operationId: start_voice_session
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [room_name]
+              properties:
+                room_name:
+                  type: string
+      responses:
+        '200':
+          description: Session started / running
+
+  /voice/session/stop:
+    post:
+      summary: Stop LiveKit Voice Session Agent
+      operationId: stop_voice_session
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [room_name]
+              properties:
+                room_name:
+                  type: string
+      responses:
+        '200':
+          description: Session stopping
+
   /query:
     post:
       summary: Query Indexed Documents

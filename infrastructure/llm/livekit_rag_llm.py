@@ -1,5 +1,6 @@
 import asyncio
 from typing import AsyncIterable
+import logging
 from livekit.agents import llm
 from application.use_cases.query_rag import RagPipeline
 
@@ -24,6 +25,7 @@ class RagLLMStream(llm.LLMStream):
             ]
         )
 
+logger = logging.getLogger("livekit-agent-voice-query")
 
 class RagLLM(llm.LLM):
     def __init__(self, rag_pipeline: RagPipeline):
@@ -34,6 +36,7 @@ class RagLLM(llm.LLM):
     def chat(self, *, chat_ctx: llm.ChatContext, **kwargs) -> llm.LLMStream:
         # We find the latest user message
         user_message = ""
+        logger.debug("User message:", chat_ctx.messages)
         for msg in chat_ctx.messages:
             if msg.role == "user":
                 user_message = msg.content
@@ -41,6 +44,7 @@ class RagLLM(llm.LLM):
         # Fire off the RAG generation in a separate thread/task
         # We need an asyncio wrapper for the blocking run() call
         loop = asyncio.get_event_loop()
+        logger.debug("User message:", user_message)
         answer_task = loop.run_in_executor(None, self.rag.run, user_message)
         
         return RagLLMStream(answer_task, chat_ctx)

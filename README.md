@@ -34,6 +34,13 @@ Create a `.env` file in the root directory and add your Groq API Key:
 GROQ_API_KEY="gsk_your_api_key_here"
 ```
 
+For **LiveKit voice**, also set:
+```text
+LIVEKIT_URL="wss://your-livekit-server"
+LIVEKIT_API_KEY="..."
+LIVEKIT_API_SECRET="..."
+```
+
 3. **Start the FastAPI Server:**
 ```bash
 uvicorn main:app --reload
@@ -59,6 +66,22 @@ curl -X 'POST' \
   "folder_path": "/Users/naveenn/Documents/Projects/Personal System AI/test_data"
 }'
 ```
+This returns a `job_id`. Track progress via:
+```bash
+curl -X 'GET' "http://127.0.0.1:8000/progress/<job_id>"
+```
+
+## Voice (LiveKit)
+
+Frontend needs `VITE_LIVEKIT_URL` set (Vite env), for example in `frontend/.env`:
+```text
+VITE_LIVEKIT_URL="wss://your-livekit-server"
+```
+
+The Chat view includes a mic toggle that:
+- starts the backend voice agent for the room
+- joins the LiveKit room
+- streams user audio -> STT -> RAG -> TTS -> streamed assistant audio
 
 **2. List Indexed Documents:**
 ```bash

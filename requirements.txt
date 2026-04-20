@@ -7,3 +7,8 @@ python-docx
 groq
 pydantic-settings
 python-multipart
+python-dotenv
+faster-whisper
+TTS
+numpy
+livekit

@@ -10,7 +10,7 @@ from application.services.response_orchestrator import ResponseOrchestrator
 from application.use_cases.voice_query import VoiceQueryUseCase
 from application.use_cases.query_rag import RagPipeline
 from infrastructure.stt.whisper_service import WhisperService
-from infrastructure.tts.fish_speech_service import FishSpeechService
+from infrastructure.tts.coqui_tts_service import CoquiTTSService
 from infrastructure.progress.global_progress import progress_manager
 
 logger = setup_logger("chat_routes")
@@ -21,8 +21,8 @@ orchestrator = ResponseOrchestrator(vector_db=vector_db)
 # Initialize Voice Query services
 rag_pipeline = RagPipeline(vector_db)
 whisper_stt = WhisperService()
-fish_tts = FishSpeechService()
-voice_use_case = VoiceQueryUseCase(stt=whisper_stt, tts=fish_tts, rag=rag_pipeline)
+coqui_tts = CoquiTTSService()
+voice_use_case = VoiceQueryUseCase(stt=whisper_stt, tts=coqui_tts, rag=rag_pipeline)
 
 
 class ScanRequest(BaseModel):

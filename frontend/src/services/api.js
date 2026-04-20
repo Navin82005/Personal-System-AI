@@ -56,6 +56,45 @@ export const fetchProgress = async (jobId) => {
   return res.json();
 };
 
+export const fetchLivekitToken = async (roomName, participantName) => {
+  const res = await fetch(`${BASE_URL}/livekit-token`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ room_name: roomName, participant_name: participantName }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => null);
+    throw new Error(err?.detail || `LiveKit token error: ${res.status}`);
+  }
+  return res.json();
+};
+
+export const startVoiceSession = async (roomName) => {
+  const res = await fetch(`${BASE_URL}/voice/session/start`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ room_name: roomName }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => null);
+    throw new Error(err?.detail || `Voice session start error: ${res.status}`);
+  }
+  return res.json();
+};
+
+export const stopVoiceSession = async (roomName) => {
+  const res = await fetch(`${BASE_URL}/voice/session/stop`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ room_name: roomName }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => null);
+    throw new Error(err?.detail || `Voice session stop error: ${res.status}`);
+  }
+  return res.json();
+};
+
 export const fetchInsightsSummary = async () => {
   const res = await fetch(`${BASE_URL}/insights/summary`);
   if (!res.ok) throw new Error(`Insights summary error: ${res.status}`);
